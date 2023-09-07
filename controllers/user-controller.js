@@ -22,6 +22,7 @@ export const signup = async(req, res, next) => {
         existingUser = await User.findOne({email});
     } catch (error) {
         console.log(error);
+        return res.status(500).json({ message: error.message });
     }
     if (existingUser) {
         return res.status(400).json({ message: "User Already Exists! Login Instead."});
@@ -30,10 +31,28 @@ export const signup = async(req, res, next) => {
     const user = new User({ name, email, password: hashedPassword });
     try {
         await user.save();
-    } catch (err) {
-        console.log(err);
-        return res.status(500).json({ message: err.message });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: error.message });
     }
     return res.status(201).json({ user });
+}
 
+export const login = async(req, res, next) => {
+    const { email, password } = req.body;
+    let existingUser;
+    try {
+        existingUser = await User.findOne({email});
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: error.message });
+    }
+    if (!existingUser) {
+        return res.status(404).json({ message: "User Does Not Exist."});
+    }
+    const isPasswordCorrect = bcrypt.compareSync(password, existingUser.password);
+    if (!isPasswordCorrect) {
+        return res.status(400).json({ message: "Login ID or Password is Incorrect!" });
+    }
+    return res.status(200).json({ message: "Login Successful." });
 }
