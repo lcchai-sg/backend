@@ -128,3 +128,31 @@ export const deleteBlog = async (req, res, next) => {
     }
     return res.status(200).json({ message: "Blog Deleted."});
 }
+
+export const getByUser = async(req, res, next) => {
+    const userID = req.params.id;
+    let user;
+    try {
+        user = await User.findOne({ _id: userID });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Error finding user!"});        
+    }
+    if (!user) {
+        return res.status(404).json({ message: "User Not Found!" });
+    }
+    let reply = {};
+    reply.name = user.name;
+    reply.email = user.email;
+    reply.blogs = [];
+    for (const b of user.blogs) {
+        try {
+            let blog = await Blog.findOne({ _id: b });
+            reply.blogs.push({ _id: blog._id, id: blog.blogID, title: blog.title, description: blog.description })
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ message: "Error getting blogs by user!"});        
+        }
+    }
+    return res.status(200).json({ reply });
+}
